@@ -25,33 +25,31 @@ async function checkLine() {
 }
 
 function isValid(line) {
-	const minRegex = /^([0-9]+)-/;
-	const maxRegex = /-([0-9]+) /;
+	const indexARegex = /^([0-9]+)-/;
+	const indexBRegex = /-([0-9]+) /;
 	const letterRegex = / ([a-z]):/;
 	const passwordRegex = / ([a-z]+)$/;
 
-	const minCount = parseInt(captureGroup(minRegex, line));
-	const maxCount = parseInt(captureGroup(maxRegex, line));
+	const indexA = parseInt(captureGroup(indexARegex, line));
+	const indexB = parseInt(captureGroup(indexBRegex, line));
 	const letter = captureGroup(letterRegex, line).charAt(0);
 	const password = captureGroup(passwordRegex, line);
 
-	var ocurrences = countOccurrences(letter, password);
-	return ocurrences >= minCount && ocurrences <= maxCount;
+	var isAtA = isPresentAtIndex(indexA, letter, password);
+	var isAtB = isPresentAtIndex(indexB, letter, password);
+
+	return (isAtA || isAtB) && !(isAtA && isAtB);
 }
 
 function captureGroup(regex, line) {
 	return regex.exec(line)[1]
 }
 
-function countOccurrences(letter, password) {
-	var count = 0;
+function isPresentAtIndex(index, letter, password) {
+	if (password.charAt(index - 1) == letter)
+		return true;
 
-	for (var i = 0; i < password.length; i++) {
-		if (password.charAt(i) == letter)
-			count++;
-	}
-
-	return count;
+	return false;
 }
 
 module.exports.run = run;
