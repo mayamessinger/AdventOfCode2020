@@ -7,13 +7,16 @@ const row1 = 'B';
 const column0 = 'L';
 const column1 = 'R';
 
-let highestSeatId = 0;
+let seats = [];
 
 
 async function run() {
 	await checkPasses();
 
-	console.log(highestSeatId);
+	seats.sort(function(a,b) {return a-b});
+
+	let mySeat = findMySeat();
+	console.log(mySeat);
 }
 
 async function checkPasses() {
@@ -27,8 +30,7 @@ async function checkPasses() {
 		const column = getColumnId(line);
 
 		const seat = row * 8 + column;
-		if (seat > highestSeatId)
-			highestSeatId = seat;
+		seats.push(parseInt(seat));
 	}
 	rl.close();
 }
@@ -56,6 +58,15 @@ function replaceChar(input, toReplace, replacement) {
 	return input.split(toReplace).join(replacement);
 }
 
+/*
+ * if next taken seat is not seatId + 1, then seatId + 1 is not taken, and is my seat
+*/
+function findMySeat() {
+	for (i = 0; i < seats.length - 2; i++) {
+		if (seats[i+1] !== seats[i] + 1)
+			return seats[i] + 1;
+	}
+}
 
 module.exports.run = run;
 this.run();
