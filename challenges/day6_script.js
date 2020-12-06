@@ -2,6 +2,9 @@ const fs = require('fs');
 const readline = require('readline');
 
 const fileStream = fs.createReadStream('day6_input.txt');
+const possibleYeses = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+	"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
+
 let sumGroupYeses = 0;
 
 async function run() {
@@ -16,14 +19,14 @@ async function countYeses() {
 		crlfDelay: Infinity
 	});
 
-	let currentGroupYeses = [];
+	let currentGroupYeses = possibleYeses;
 	for await (const line of rl) {
 		if (line) {
-			countPersonYeses(line, currentGroupYeses);
+			currentGroupYeses = checkPersonYesesWithGroup(line, currentGroupYeses);
 		}
 		else {
 			sumGroupYeses += currentGroupYeses.length;
-			currentGroupYeses = [];
+			currentGroupYeses = possibleYeses;
 			continue;
 		}
 	}
@@ -33,15 +36,10 @@ async function countYeses() {
 	rl.close();
 }
 
-/**
- * Adds any unique answers of an individual (letters in this line)
- * to groupYeses. Skips answers that already exist in groupYeses
-*/
-function countPersonYeses(line, groupYeses) {
-	for (var i = 0; i < line.length; i++) {
-		if (groupYeses.indexOf(line[i]) === -1)
-			groupYeses.push(line[i]);
-	}
+function checkPersonYesesWithGroup(line, groupYeses) {
+	var lineArray = line.split("");
+
+	return groupYeses.filter(letter => lineArray.includes(letter));
 }
 
 module.exports.run = run;
