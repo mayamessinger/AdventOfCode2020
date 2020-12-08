@@ -27,10 +27,9 @@ class Content {
 
 async function run() {
 	const bagRules = await parseRules();
-	const goldBagWrappers = getBagWrappers("shiny gold", bagRules); // can have duplicates, if some parent bags share parents
-	const uniqueBagWrappers = goldBagWrappers.filter(filterUnique);
+	const goldBagContentsCount = getContentsCount("shiny gold", bagRules);
 
-	console.log(uniqueBagWrappers.length);
+	console.log(goldBagContentsCount);
 }
 
 async function parseRules() {
@@ -81,22 +80,17 @@ function getContents(line) {
 
 /**
  * recursively checks rules.
- * for each bag that can directly hold a bag of color, check what bags can hold it (directly + indirectly).
- * does not filter for uniqueness in results in any way.
+ * for each bag (that can hold other bags), check what bags it can hold and what bags those bags can hold.
  */
-function getBagWrappers(color, bagRules) {
-	let colorHolders = [];
-	bagRules.filter(bag => bag.contents.some(c => c.bagColor === color)).forEach(bag => {
-		colorHolders.push(bag.color);
-		getBagWrappers(bag.color, bagRules).forEach(b => colorHolders.push(b));
+function getContentsCount(color, bagRules) {
+	let contentsCount = 0;
+	bagRules.filter(bag => bag.color === color).forEach(bag => {
+		contentsCount += bag.contents.reduce((total, content) => total + content.count, 0);
+		bag.contents.forEach(c => contentsCount += c.count * getContentsCount(c.bagColor, bagRules));
 	});
 
-	return colorHolders;
+	return contentsCount;
 }
-
-function filterUnique(value, index, self) {
-	  return self.indexOf(value) === index;
-	}
 
 module.exports.run = run;
 this.run();
