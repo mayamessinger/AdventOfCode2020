@@ -19,23 +19,43 @@ const operations = {
 
 function run() {
 	runBootCode();
-
-	console.log(accumulator);
 }
 
 function runBootCode() {
 	const rl = fs.readFileSync("./day8_input.txt").toString("utf-8").split("\n");
-	const instructions = rl.map(c => parseInstruction(c));
-	const visited = new Array(rl.length).fill(false);
+
+	for (var i = 0; i < rl.length; i++) {
+		accumulator = 0;
+		const instructions = rl.map(c => parseInstruction(c));
+
+		if (instructions[i].operation === operations.NOP) {
+			instructions[i].operation = operations.JMP;
+		}
+		else if (instructions[i].operation === operations.JMP) {
+			instructions[i].operation = operations.NOP;
+		}
+
+		if (instructions[i].operation !== operations.ACC && runWithoutLoop(instructions)) {
+			console.log("changed instruction _ to _", i, instructions[i]);
+			console.log("accumulator", accumulator);
+			return;
+		}
+	}
+}
+
+function runWithoutLoop(instructions) {
+	const visited = new Array(instructions.length).fill(false);
 
 	var instructionIndex = 0;
 	while (instructionIndex < instructions.length) {
 		if (visited[instructionIndex] === true)
-			break;
+			return false;
 
 		visited[instructionIndex] = true;
 		instructionIndex += executeInstruction(instructions[instructionIndex]);
 	}
+
+	return true;
 }
 
 function parseInstruction(instructionString) {
