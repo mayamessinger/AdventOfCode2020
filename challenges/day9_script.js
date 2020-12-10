@@ -2,7 +2,7 @@ const fs = require('fs');
 
 const fileName = 'day9_input.txt';
 
-const preambleLength = 25;
+const weakNumber = 15690279;
 
 function run() {
 	runXmas();
@@ -11,38 +11,31 @@ function run() {
 function runXmas() {
 	const rl = fs.readFileSync(fileName).toString("utf-8").split("\n");
 	const xmasCode = rl.map(x => parseInt(x));
-	let validArgs = new Array(25).fill(0);
 
-	for (var i = 0; i < rl.length; i++) {
-		if (i >= 25) {
-			const valid = isValid(xmasCode[i], validArgs);
+	var sumStartIndex = 0;
+	var sumValue = 0;
+	for (var i = 0; i < xmasCode.length; i++) {
+		sumValue += xmasCode[i];
 
-			if (!valid) {
-				console.log(i, xmasCode[i]);
-				break;
+		while (sumValue >= weakNumber) {
+			if (sumValue === weakNumber) {
+				console.log(sumStartIndex, i);
+				let answer = determinePuzzleAnswer(xmasCode, sumStartIndex, i);
+				console.log(answer);
+				return;
 			}
-		}
 
-		editValidArgs(i, xmasCode[i], validArgs);
+			sumValue -= xmasCode[sumStartIndex];
+			sumStartIndex++;
+		}
 	}
 }
 
-function isValid(value, validArgs) {
-	for (var i = 0; i < preambleLength; i++) {
-		for (var j = 0; j < preambleLength; j++) {
-			if (validArgs[i] + validArgs[j] === value && i !== j) {
-				return true;
-			}
-		}
-	}
+function determinePuzzleAnswer(xmasCode, sumStartIndex, i) {
+	const sumNumbers = xmasCode.splice(sumStartIndex, i - sumStartIndex);
+	const sorted = sumNumbers.sort(function(a, b) {return a - b});
 
-	return false;
-}
-
-function editValidArgs(index, value, validArgs) {
-	const argsIndex = index % preambleLength;
-
-	validArgs[argsIndex] = value;
+	return sorted[0] + sorted[sumNumbers.length - 1];
 }
 
 module.exports.run = run;
