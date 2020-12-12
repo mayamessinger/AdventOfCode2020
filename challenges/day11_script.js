@@ -40,7 +40,7 @@ function processRounds(startState) {
 			if (startState[i][j] === emptyChar && surroundingInfo[2] === 0) {
 				endState[i][j] = occupiedChar;
 			}
-			else if (startState[i][j] === occupiedChar && surroundingInfo[2] >= 4) {
+			else if (startState[i][j] === occupiedChar && surroundingInfo[2] >= 5) {
 				endState[i][j] = emptyChar;
 			}
 		}
@@ -77,20 +77,31 @@ function deepCopy(array) {
 function surroundingSeats([i, j], allSeats) {
 	let surroundingSeats = new Array(3).fill(0);
 
-	for (var k = -1; k <= 1; k++) {
-		for (var m = -1; m <= 1; m++) {
-			if (allSeats[i + k] !== undefined && allSeats[i + k][j + m] !== undefined) {
-				let rowChar = allSeats[i + k][j + m];
+	for (k = -1; k <= 1; k++) {
+		for (m = -1; m <= 1; m++) {
+			if (k === 0 && m === 0)
+				continue;
 
-				if (k === 0 && m === 0)
-					continue; // do not count this place's contents
+			let stop = false;
+			let magnitude = 1;
+			while (!stop) {
+				if (allSeats[i + k * magnitude] === undefined || allSeats[i + k * magnitude][j + m * magnitude] === undefined) {
+					stop = true;
+					continue;
+				}
 
-				if (rowChar === floorChar)
-					surroundingSeats[0]++;
-				else if (rowChar === emptyChar)
+				let rowChar = allSeats[i + k * magnitude][j + m * magnitude];
+				if (rowChar === floorChar) {
+					magnitude++;
+				}
+				else if (rowChar === emptyChar) {
 					surroundingSeats[1]++;
-				else if (rowChar === occupiedChar)
+					stop = true;
+				}
+				else if (rowChar === occupiedChar) {
 					surroundingSeats[2]++;
+					stop = true;
+				}
 			}
 		}
 	}
