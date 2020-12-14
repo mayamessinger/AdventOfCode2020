@@ -12,7 +12,8 @@ class Location {
 	constructor() {
 		this.latitude = 0;
 		this.longitude = 0;
-		this.orientation = "E";
+		this.waypointLatOffset = 10;
+		this.waypointLongOffset = 1;
 	}
 
 	applyInstruction(instruction) {
@@ -21,23 +22,75 @@ class Location {
 			this.applyMovement(instruction);
 		}
 		// if a Turn
-		else if (instruction["orientation"])
+		else if (instruction["numTurns"])
 			this.applyTurn(instruction);
 	}
 
 	applyMovement(movement) {
-		if (movement.dir === "N")
-			this.latitude += movement.distance;
-		else if (movement.dir === "S")
-			this.latitude -= movement.distance;
-		else if (movement.dir === "E")
-			this.longitude += movement.distance;
-		else if (movement.dir === "W")
-			this.longitude -= movement.distance;
+		if (movement.dir === "N") {
+			this.waypointLongOffset += movement.distance;
+		}
+		else if (movement.dir === "S") {
+			this.waypointLongOffset -= movement.distance;
+		}
+		else if (movement.dir === "E") {
+			this.waypointLatOffset += movement.distance;
+		}
+		else if (movement.dir === "W") {
+			this.waypointLatOffset -= movement.distance;
+		}
+		else if (movement.dir === "F") {
+			this.latitude += this.waypointLatOffset * movement.distance;
+			this.longitude += this.waypointLongOffset * movement.distance;
+		}
 	}
 
 	applyTurn(turn) {
-		this.orientation = turn.orientation;
+		for (var i = 0; i < turn.numTurns/90; i++) {
+			if (turn.direction === "R") {
+				const ogLat = this.waypointLatOffset;
+				const ogLong = this.waypointLongOffset;
+
+				if (ogLat >= 0 && ogLong >= 0) {
+					this.waypointLatOffset = ogLong;
+					this.waypointLongOffset = -ogLat;
+				}
+				else if (ogLat >= 0 && ogLong < 0) {
+					this.waypointLatOffset = ogLong;
+					this.waypointLongOffset = -ogLat;
+				}
+				else if (ogLat < 0 && ogLong < 0) {
+					this.waypointLatOffset = ogLong;
+					this.waypointLongOffset = -ogLat;
+				}
+				else if (ogLat < 0 && ogLong >= 0) {
+					this.waypointLatOffset = ogLong;
+					this.waypointLongOffset = -ogLat;
+				}
+			}
+
+			if (turn.direction === "L") {
+				const ogLat = this.waypointLatOffset;
+				const ogLong = this.waypointLongOffset;
+
+				if (ogLat >= 0 && ogLong >= 0) {
+					this.waypointLatOffset = -ogLong;
+					this.waypointLongOffset = ogLat;
+				}
+				else if (ogLat < 0 && ogLong >= 0) {
+					this.waypointLatOffset = -ogLong;
+					this.waypointLongOffset = ogLat;
+				}
+				else if (ogLat < 0 && ogLong < 0) {
+					this.waypointLatOffset = -ogLong;
+					this.waypointLongOffset = ogLat;
+				}
+				else if (ogLat >= 0 && ogLong < 0) {
+					this.waypointLatOffset = -ogLong;
+					this.waypointLongOffset = ogLat;
+				}
+			}
+		}
 	}
 
 	getDistance() {
@@ -53,8 +106,9 @@ class Movement {
 }
 
 class Turn {
-	constructor(orientation) {
-		this.orientation = orientation;
+	constructor(direction, numTurns) {
+		this.direction = direction;
+		this.numTurns = numTurns;
 	}
 }
 
@@ -83,36 +137,10 @@ function parseInstruction(instrStr, location) {
 	const instructionRegex = /^([NESWLRF])([0-9]+)$/;
 	const match = instructionRegex.exec(instrStr.trim());
 
-	const dir = getDir(match[1], location);
-	if (dir !== null)
-		return new Movement(dir, parseInt(match[2]));
+	if (match[1] !== "L" && match[1] !== "R")
+		return new Movement(match[1], parseInt(match[2]));
 
-	const orientation = getOrientation(match, location);
-	return new Turn(orientation);
-}
-
-function getDir(dirOrTurn, location) {
-	if (dirOrTurn === "F") {
-		return location.orientation;
-	}
-	else if (directions.indexOf(dirOrTurn) !== -1) {
-		return dirOrTurn;
-	}
-
-	return null;
-}
-
-function getOrientation(turn, location) {
-	let turnDir = turn[1];
-	let turnAmt = parseInt(turn[2]);
-	let posTurnAmt = turnDir === "R"
-		? turnAmt
-		: turnAmt * -1 + 360;
-	let addIndex = (posTurnAmt % 360) / 90;
-
-	let newIndex = (directions.indexOf(location.orientation) + addIndex) % 4;
-
-	return directions[newIndex];
+	return new Turn(match[1], parseInt(match[2]));
 }
 
 module.exports.run = run;
