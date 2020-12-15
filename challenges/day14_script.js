@@ -4,8 +4,8 @@ const fileName = 'day14_input.txt';
 
 class Command {
 	constructor(memAddr, value) {
-		this.memoryAddress = memAddr;
-		this.binaryValue = this.createBinary(value);
+		this.memoryAddress = this.createBinary(memAddr);
+		this.value = value;
 	}
 
 	createBinary(value) {
@@ -16,28 +16,28 @@ class Command {
 }
 
 function run() {
-	const memory = parseRows();
+	const memory = populateMemory();
 	const sumMemoryValues = addValues(memory);
 
 	console.log(sumMemoryValues);
 }
 
-function parseRows() {
+function populateMemory() {
 	const rl = fs.readFileSync(fileName).toString("utf-8").split("\n");
-	let memory = new Array();
+	let memory = new Map();
 
-	let currMask = "";
+	let currentMask = "";
 	for (var i = 0; i < rl.length; i++) {
 		const line = rl[i].trim();
 
 		if (isMask(line)) {
-			currMask = parseMask(line);
+			currentMask = parseMask(line);
 		}
 		else {
 			let command = parseCommand(line);
-			maskCommand(command, currMask);
+			let addresses = applyMask(command.memoryAddress, currentMask);
 
-			memory[command.memoryAddress] = command.binaryValue;
+			addresses.forEach(addr => memory.set(parseInt(addr, 2), command.value));
 		}
 	}
 
@@ -66,28 +66,43 @@ function parseCommand(line) {
 	return new Command(memAddr, value);
 }
 
-function maskCommand(command, mask) {
-	let maskedValue = command.binaryValue;
-
-	for (var i = 0; i < command.binaryValue.length; i++) {
-		const maskChar = mask.charAt(i);
-
-		if (maskChar !== "X")
-			maskedValue = replace(maskedValue, i, maskChar);
+function applyMask(binary, mask) {
+	let maskedValue = binary;
+	for (var i = 0; i < mask.length; i++) {
+		if (mask[i] === "1")
+			maskedValue = replace(maskedValue, i, "1");
+		else if (mask[i] === "X")
+			maskedValue = replace(maskedValue, i, "X");
 	}
 
-	command.binaryValue = maskedValue;
+	return handleFloating(maskedValue);
 }
 
 function replace(value, index, newChar) {
 	return value.substring(0, index) + newChar + value.substring(index + 1);
 }
 
-function addValues(memory) {
-	const values = memory.filter(m => m !== null);
+function handleFloating(binary) {
+	let newBinaries = new Array();
 
+	const i = binary.indexOf("X");
+	if (i === -1) {
+		newBinaries.push(binary);
+		return newBinaries;
+	}
+	
+	let newBinary0 = replace(binary, i, "0");
+	let newBinary1 = replace(binary, i, "1");
+
+	newBinaries = newBinaries.concat(handleFloating(newBinary0));
+	newBinaries = newBinaries.concat(handleFloating(newBinary1));
+
+	return newBinaries;
+}
+
+function addValues(map) {
 	let sum = 0;
-	values.forEach(v => sum += parseInt(v, 2));
+	map.forEach(v => sum += v);
 
 	return sum;
 }
