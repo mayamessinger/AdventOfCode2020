@@ -2,21 +2,26 @@ const fs = require('fs');
 
 const fileName = 'day13_input.txt';
 
-function run() {
-	const [myArrival, buses] = parseRows();
-	const earliestBus = getEarliestBus(myArrival, buses);
-	const puzzleAnswer = getPuzzleAnswer(myArrival, earliestBus);
+class Bus {
+	constructor(index, id) {
+		this.index = index;
+		this.id = id;
+	}
+}
 
-	console.log(puzzleAnswer);
+function run() {
+	const buses = parseRows();
+	const timestampT = getTimestampT(buses);
+
+	console.log(timestampT);
 }
 
 function parseRows() {
 	const rl = fs.readFileSync(fileName).toString("utf-8").split("\n");
 
-	const myArrival = parseInt(rl[0].trim());
 	const buses = loadBuses(rl[1].trim());
 
-	return [myArrival, buses];
+	return buses;
 }
 
 function loadBuses(busesStr) {
@@ -25,32 +30,41 @@ function loadBuses(busesStr) {
 	let buses = [];
 	for (var i = 0; i < busArr.length; i++) {
 		if (busArr[i] !== "x")
-			buses.push(parseInt(busArr[i]));
+			buses.push(new Bus(i, parseInt(busArr[i])));
 	}
 
 	return buses;
 }
 
-function getEarliestBus(arrival, buses) {
-	let closestStopTimes = new Array(buses.length);
-	for (var i = 0; i < buses.length; i++) {
-		// closest bus stop round after arrival
-		let busRound = Math.floor(arrival/buses[i]) + 1;
+function getTimestampT(buses) {
+	let longestRoute = buses.find(b => b.id === Math.max(...buses.map(x => x.id)));
 
-		closestStopTimes[i] = [buses[i], busRound * buses[i]];
+	let timestampT = null;
+	let i = Math.floor((100000000000000 + longestRoute.index) / longestRoute.id);
+	while(timestampT === null) {
+		if (isTimestampT(longestRoute, i, buses)) {
+			timestampT = i;
+		}                                               
+		else {
+			i++;
+		}
 	}
 
-	closestStopTimes.sort(function(a, b) { return (a[1] - arrival) - (b[1] - arrival) });
-
-	return closestStopTimes[0][0];
+	return i * longestRoute.id - longestRoute.index;
 }
 
-function getPuzzleAnswer(arrival, bus) {
-	// get earliest time at which someone arriving at arrival can get on bus bus
-	let busIncrement = Math.floor(arrival/bus) + 1;
+function isTimestampT(longestRoute, multiplier, buses) {
+	const baseArrival = longestRoute.id * multiplier;
 
-	// wait time * bus id
-	return (busIncrement * bus - arrival) * bus;
+	for (i = 0; i < buses.length; i++) {
+		const indexDiff = longestRoute.index - buses[i].index;
+		const expectedIValue = baseArrival - indexDiff;
+
+		if (expectedIValue % buses[i].id !== 0)
+			return false;
+	}
+
+	return true;
 }
 
 module.exports.run = run;
