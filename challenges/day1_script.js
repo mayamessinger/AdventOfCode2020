@@ -1,7 +1,7 @@
 const fs = require('fs');
 const readline = require('readline');
 
-const fileStream = fs.createReadStream('day1_input.txt');
+const fileStream = fs.createReadStream('../inputs/day1_input.txt');
 let numbers = [];
 
 async function run() {

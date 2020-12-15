@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const fileName = 'day10_input.txt';
+const fileName = '../inputs/day10_input.txt';
 
 class Node {
 	constructor(value) {

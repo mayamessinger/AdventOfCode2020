@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const fileName = 'day11_input.txt';
+const fileName = '../inputs/day11_input.txt';
 let floorChar = '.';
 let emptyChar = 'L';
 let occupiedChar = '#';

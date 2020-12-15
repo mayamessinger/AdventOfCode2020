@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const fileStream = fs.createReadStream('day8_input.txt');
+const fileName = "../inputs/day8_input.txt";
 
 let accumulator = 0;
 
@@ -22,7 +22,7 @@ function run() {
 }
 
 function runBootCode() {
-	const rl = fs.readFileSync("./day8_input.txt").toString("utf-8").split("\n");
+	const rl = fs.readFileSync(fileName).toString("utf-8").split("\n");
 
 	for (var i = 0; i < rl.length; i++) {
 		accumulator = 0;

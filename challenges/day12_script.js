@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const fileName = 'day12_input.txt';
+const fileName = '../inputs/day12_input.txt';
 
 const directions = ["E", "S", "W", "N"];
 const turns = {

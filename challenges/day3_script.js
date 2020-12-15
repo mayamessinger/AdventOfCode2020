@@ -25,7 +25,7 @@ async function run() {
 }
 
 async function checkLine(slopeHoriz, slopeVert) {
-	const fileStream = fs.createReadStream('day3_input.txt');
+	const fileStream = fs.createReadStream('../inputs/day3_input.txt');
 	const rl = readline.createInterface({
 		input: fileStream,
 		crlfDelay: Infinity

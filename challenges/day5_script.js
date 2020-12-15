@@ -1,7 +1,7 @@
 const fs = require('fs');
 const readline = require('readline');
 
-const fileStream = fs.createReadStream('day5_input.txt');
+const fileStream = fs.createReadStream('../inputs/day5_input.txt');
 const row0 = 'F'; // character that represents binary 0, for row
 const row1 = 'B';
 const column0 = 'L';

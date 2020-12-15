@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const fileName = 'day13_input.txt';
+const fileName = '../inputs/day13_input.txt';
 
 class Bus {
 	constructor(index, id) {

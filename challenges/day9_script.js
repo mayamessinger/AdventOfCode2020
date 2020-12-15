@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const fileName = 'day9_input.txt';
+const fileName = '../inputs/day9_input.txt';
 
 const weakNumber = 15690279;
 

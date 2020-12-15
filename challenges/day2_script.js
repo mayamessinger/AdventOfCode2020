@@ -1,7 +1,7 @@
 const fs = require('fs');
 const readline = require('readline');
 
-const fileStream = fs.createReadStream('day2_input.txt');
+const fileStream = fs.createReadStream('../inputs/day2_input.txt');
 let numValid = 0;
 
 async function run() {

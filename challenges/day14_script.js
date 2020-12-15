@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const fileName = 'day14_input.txt';
+const fileName = '../inputs/day14_input.txt';
 
 class Command {
 	constructor(memAddr, value) {
