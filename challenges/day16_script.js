@@ -23,11 +23,20 @@ class Ticket {
 	}
 }
 
+class FieldIndex {
+	constructor(index, name) {
+		this.index = index;
+		this.name = name;
+	}
+}
+
 function run() {
 	const [fieldRules, myTicket, nearbyTickets] = parseInput();
-	const errorRate = invalidateTickets(nearbyTickets, fieldRules);
+	const goodTickets = invalidateTickets(nearbyTickets, fieldRules);
+	const fieldIndices = determineFieldIndices(goodTickets, fieldRules);
+	const puzzleAnswer = getAnswer(myTicket, fieldIndices, 'departure');
 
-	console.log(errorRate);
+	console.log(puzzleAnswer);
 }
 
 function parseInput() {
@@ -74,13 +83,14 @@ function parseTicket(line) {
 }
 
 function invalidateTickets(tickets, rules) {
-	let errorRate = 0;
+	let badTickets = [];
 
 	tickets.forEach(t => {
-		errorRate += ticketError(t, rules);
+		if (ticketError(t, rules) !== 0)
+			badTickets.push(t);
 	});
 
-	return errorRate;
+	return tickets.filter(t => badTickets.indexOf(t) === -1);
 }
 
 function ticketError(ticket, rules) {
@@ -103,6 +113,70 @@ function isValidValue(value, rules) {
 		}
 	}
 	return value;
+}
+
+function determineFieldIndices(validTickets, rules) {
+	let possiblePairs = new Map();
+
+	for (var ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
+		const rule = rules[ruleIndex];
+
+		for (var ticketIndex = 0; ticketIndex < validTickets[0].values.length; ticketIndex++) {
+			let valuesAtIndex = validTickets.map(t => t.values[ticketIndex]);
+
+			if (valuesAtIndex.every(v => isValidValue(v, [rule]) === 0)) {
+				let existingpairs = possiblePairs.get(ticketIndex);
+
+				if (existingpairs)
+					existingpairs.add(rule.name);
+				else {
+					let pairs = new Set([rule.name]);
+					possiblePairs.set(ticketIndex, pairs);
+				}
+			}
+		}
+	}
+
+	return reconcilePairs(possiblePairs);
+}
+
+/**
+ * given a list of possible ticket index-rule pairings,
+ * use elimination to determine which indices must correspond to which rules.
+ * in order for there to be a 1:1 indiex-rule pairing, we must have some starting info
+ * (some indices only fit with one specific rule). lock those known pairings in,
+ * and prevent the locked-in rules from being paired again.
+ * continue iterating until all pairings are locked in at a 1:1 index:rule ratio.
+ */
+function reconcilePairs(reconcilePairs) {
+	let arrayOneToMany = Array.from(reconcilePairs, ([key, fieldNamePairs]) => ({key, fieldNamePairs}));
+	let lockedInValues = new Set();
+
+	while (arrayOneToMany.some(m => m.fieldNamePairs.size > 1)) {
+		for (var i = 0; i < arrayOneToMany.length; i++) {
+			const match = arrayOneToMany[i];
+
+			if (match.fieldNamePairs.size === 1) {
+				let lockedInField = match.fieldNamePairs.values().next().value;
+
+				lockedInValues.add(new FieldIndex(match.key, lockedInField));
+				arrayOneToMany.forEach(m => m.fieldNamePairs.delete(lockedInField));
+			}
+		}
+	}
+
+	return lockedInValues;
+}
+
+function getAnswer(ticket, fieldIndices, phrase) {
+	let answer = 1;
+
+	fieldIndices.forEach(fi => {
+		if (fi.name.startsWith(phrase))
+			answer *= ticket.values[fi.index];
+	});
+
+	return answer;
 }
 
 module.exports.run = run;
