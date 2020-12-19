@@ -75,28 +75,27 @@ function evaluateSimpleExpression(expression) {
 		return expression;
 
 	expression = expression.replace(/\)/g, "").replace(/\(/g, "").replace(/ /g, "");
-	const numbers = expression.split(/[+*]/).filter(n => n.length !== 0);
-	const operators = expression.split(/[0-9]+/).filter(o => o.length !== 0);
+	const numbers = expression.split(/[*]/).filter(n => n.length !== 0);
 
-	if (expression.startsWith(operators[0]))
+	if (expression.startsWith("+") || expression.startsWith("*"))
 		return expression;
 
-	let value = 0;
-	let operator = "+";
-	for (var i = 0; i < numbers.length; i++) {
-		const num = parseInt(numbers[i]);
-
-		if (operator === "+")
-			value += num;
-		else if (operator === "*")
-			value *= num;
-
-		operator = operators.length > i
-			? operators[i]
-			: "";
-	}
+	let value = 1;
+	numbers.forEach(n => value *= add(n));
 
 	return value;
+}
+
+function add(expression) {
+	if (expression.indexOf("+") === -1)
+		return parseInt(expression);
+
+	const numbers = expression.split(/[+]/).filter(n => n.length !== 0).map(n => parseInt(n));
+
+	let result = 0;
+	numbers.forEach(n => result += n);
+
+	return result;
 }
 
 module.exports.run = run;
