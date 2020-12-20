@@ -79,12 +79,29 @@ function compileRuleRegex(rules, ruleId) {
 	let regex = "";
 	rule.patterns.forEach(p => {
 		p.forEach(r => {
-			regex += "(" + compileRuleRegex(rules, r) + ")";
+			if (r === ruleId) {
+				if (r === 8) {
+					regex += "(";
+					regex += compileRuleRegex(rules, 42);
+					regex += "){1,}";
+				}
+				else if (r === 11) { // hard-code mirroring
+					for (var i = 1; i <= 3; i++) {
+						regex += "(";
+						regex += "(" + compileRuleRegex(rules, 42) + "){" + i + "}";
+						regex += "(" + compileRuleRegex(rules, 31) + "){" + i + "}";
+						regex += ")|";
+					}
+				}
+			}
+			else {
+				regex += compileRuleRegex(rules, r);
+			}
 		});
 
 		regex += "|";
 	});
-	regex = regex.slice(0, -1); // remove trailing |
+	regex = "(" + regex.slice(0, -1) + ")"; // remove trailing |
 
 	rule.regex = regex;
 
