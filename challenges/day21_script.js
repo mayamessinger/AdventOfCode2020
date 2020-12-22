@@ -19,9 +19,9 @@ class Allergen {
 function run() {
 	const [ingredients, allergens] = parseInput();
 	const possiblePairs = pairAllergens(ingredients, allergens);
-	const allergyFreeIngredients = getAllergyFreeIngredients(possiblePairs, ingredients);
+	const reducedPairs = reducePairings(possiblePairs);
 
-	console.log(getOccurrences(ingredients, allergyFreeIngredients));
+	console.log(canonize(reducedPairs));
 }
 
 function parseInput() {
@@ -74,31 +74,34 @@ function pairAllergens(ingredients, allergens) {
 	return pairings;
 }
 
-function getAllergyFreeIngredients(pairs, ingredients) {
-	const possibleAllergenicIngredients = new Set();
-	pairs.forEach(p => {
-		p.forEach(i => {
-			possibleAllergenicIngredients.add(i);
+function reducePairings(possiblePairs) {
+	const lockedInPairs = new Map();
+
+	while (lockedInPairs.size !== possiblePairs.size) {
+		possiblePairs.forEach((pairs, allergen) => {
+			if (pairs.size === 1) {
+				const allergenicIngredient = [...pairs.values()][0];
+				lockedInPairs.set(allergen, allergenicIngredient);
+
+				possiblePairs.forEach(p2 => {
+					p2.delete(allergenicIngredient);
+				});
+			}
 		});
-	});
+	}
 
-	const afis = new Set();
-	[...ingredients.keys()].forEach(i => {
-		if (!possibleAllergenicIngredients.has(i))
-			afis.add(i);
-	});
-
-	return afis;
+	return lockedInPairs;
 }
 
-function getOccurrences(ingredients, ingredientNames) {
-	let occurrences = 0;
+function canonize(pairs) {
+	const sortedAllergens = [...pairs.keys()].sort();
 
-	ingredientNames.forEach(i => {
-		occurrences += ingredients.get(i).foods.size
-	});
+	let canonicalIngredients = "";
+	sortedAllergens.forEach(a => {
+		canonicalIngredients += pairs.get(a) + ",";
+	});	
 
-	return occurrences;
+	return canonicalIngredients.substring(0, canonicalIngredients.length - 1);
 }
 
 module.exports.run = run;
