@@ -27,10 +27,18 @@ function parseInput() {
 }
 
 function runGame(deck1, deck2) {
+	const prevRounds = new Set();
+
 	while (deck1.length > 0 && deck2.length > 0) {
+		if (duplicateRound(deck1, deck2, prevRounds)) {
+			return [0, 0];
+		}
+
+		prevRounds.add(stringifyDecks(deck1, deck2));
+
 		const deck1Card = deck1.shift();
 		const deck2Card = deck2.shift();
-		const winner = compareCards(deck1Card, deck2Card);
+		const winner = compareCards(deck1Card, deck2Card, deck1, deck2);
 
 		if (winner === deck1Card) {
 			deck1.push(deck1Card, deck2Card);
@@ -40,21 +48,49 @@ function runGame(deck1, deck2) {
 		}
 	}
 
-	return Math.max(calculateScore(deck1), calculateScore(deck2));
+	const winnerScore = deck1.length > 0 ? calculateScore(deck1) : calculateScore(deck2);
+	return [deck1.length > 0 ? 0 : 1, winnerScore];
 }
 
-function compareCards(cardA, cardB) {
-	return cardA > cardB
-		? cardA
-		: cardB;
+function duplicateRound(deck1, deck2, prevRounds) {
+	const stringified = stringifyDecks(deck1, deck2);
+
+	let duplicate = false;
+	prevRounds.forEach(p => {
+		if (p === stringified) {
+			duplicate = true;
+		}
+	});
+
+	return duplicate;
+}
+
+function stringifyDecks(deck1, deck2) {
+	return deck1.join() + "|" + deck2.join();
+}
+
+function compareCards(cardA, cardB, deckA, deckB) {
+	if (deckA.length >= cardA && deckB.length >= cardB) {
+		const winner = runGame(deckA.slice(0, cardA), deckB.slice(0, cardB))[0];
+
+		return winner === 0
+			? cardA
+			: cardB;
+	}
+	else {
+		return cardA > cardB
+			? cardA
+			: cardB;
+	}
 }
 
 function calculateScore(deck) {
+	let deckCopy = [...deck];
 	let score = 0;
 
 	let i = 1;
-	while (deck.length > 0) {
-		score += deck.pop() * i;
+	while (deckCopy.length > 0) {
+		score += deckCopy.pop() * i;
 		i++;
 	}
 
