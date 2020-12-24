@@ -3,77 +3,86 @@ const fs = require('fs');
 const fileName = '../inputs/day23_input.txt';
 
 function run() {
-	const cups = parseInput();
-	const finalState = runGame([...cups], 100);
+	const [firstCup, cups] = parseInput();
+	const finalState = runGame([...cups], firstCup, 10000000);
 	const puzzleAnswer = getAnswer(finalState);
 
 	console.log(puzzleAnswer);
 }
 
 function parseInput() {
-	const rl = fs.readFileSync(fileName).toString("utf-8").split("");
-	let cups = [];
+	const rl = fs.readFileSync(fileName).toString("utf-8").split("").map(i => parseInt(i));
+	let cups = new Array(1000000);
 
-	rl.forEach(i => cups.push(parseInt(i)));
+	for (var i = 0; i < rl.length; i++) {
+		cups[rl[i]] = i === rl.length - 1
+			? 10
+			: rl[i + 1];
+	}
+	for (var i = 10; i <= 1000000; i++) {
+		cups[i] = i === 1000000
+			? rl[0]
+			: i+1;
+	}
 
-	return cups;
+	return [rl[0], cups];
 }
 
-function runGame(cups, numMoves) {
-	let currCup = cups[0];
+function runGame(cups, firstCup, numMoves) {
+	const cupsMax = 1000000;
+	const cupsMin = 1;
 
+	let currCup = firstCup;
 	for (var i = 0; i < numMoves; i++) {
 		const pickedUp = pickUpCups(cups, currCup);
-		const destinationCup = getDestCup(cups, currCup);
+		const destinationCup = getDestCup(pickedUp, cupsMax, cupsMin, currCup);
 
-		cups.splice(cups.indexOf(destinationCup) + 1, 0, pickedUp[0], pickedUp[1], pickedUp[2]);
+		insertCups(cups, destinationCup, pickedUp);
 
-		currCup = cups[(cups.indexOf(currCup) + 1) % cups.length];
+		currCup = cups[currCup];
 	}
 
 	return cups;
 }
 
 /*
- * Retrieves the cups to pick up and removes those values from cups
+ * Retrieves the cups to pick up and closes the linked list to exclude them
  */
 function pickUpCups(cups, currCup) {
 	let pickedUp = [];
 
+	let focusedCup = currCup;
 	for (var i = 0; i < 3; i++) {
-		const indexToPickUp = (cups.indexOf(currCup) + 1) % cups.length;
-
-		pickedUp.push(cups[indexToPickUp]);
-		cups.splice(indexToPickUp, 1);
+		pickedUp.push(cups[focusedCup]);
+		focusedCup = cups[focusedCup];
 	}
+
+	cups[currCup] = cups[focusedCup];
 
 	return pickedUp;
 }
 
-function getDestCup(cups, currCup) {
+function getDestCup(pickedUp, cupsMax, cupsMin, currCup) {
 	let destinationCup = currCup - 1;
-	let cupsMax = Math.max.apply(Math, cups);
-	let cupsMin = Math.min.apply(Math, cups);
 
-	while (cups.indexOf(destinationCup) === -1) {
-		destinationCup--;
-
-		if (destinationCup < cupsMin)
-			destinationCup = cupsMax;
+	while (pickedUp.includes(destinationCup) || destinationCup === 0) {
+		destinationCup = destinationCup <= cupsMin
+			? cupsMax
+			: destinationCup - 1;
 	}
 
 	return destinationCup;
 }
 
+function insertCups(cups, destination, toInsert) {
+	const nextCup = cups[destination];
+
+	cups[destination] = toInsert[0];
+	cups[toInsert[2]] = nextCup;
+}
+
 function getAnswer(cups) {
-	let answer = "";
-
-	const oneIndex = cups.indexOf(1);
-	for (var i = 1; i < cups.length; i++) {
-		answer += cups[(oneIndex + i) % cups.length];
-	}
-
-	return answer;
+	return cups[1] * cups[cups[1]];
 }
 
 module.exports.run = run;
